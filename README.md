@@ -6,6 +6,9 @@ Aplikasi ini dirancang dengan konsep **admin-based attendance system**, di mana 
 
 > 🚧 **Status:** Dalam Pengembangan
 
+<img width="882" height="421" alt="image" src="https://github.com/user-attachments/assets/3af53aa4-f69e-463f-a992-273613a43714" />
+
+
 ---
 
 ## 📌 Tentang Project
