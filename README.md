@@ -158,7 +158,7 @@ presensiKaryawan/
 │
 ├── pom.xml
 ├── database/
-│   └── db_presensi.sql
+│   └── db_presensikaryawan.sql
 │
 └── README.md
 ```
@@ -225,13 +225,13 @@ Pastikan **Apache** dan **MySQL** pada XAMPP sudah aktif.
 Buat database:
 
 ```text
-db_presensi
+db_presensikaryawan
 ```
 
 Kemudian import file SQL yang tersedia pada folder:
 
 ```text
-database/db_presensi.sql
+database/db_presensikaryawan.sql
 ```
 
 ### 4. Konfigurasi Database
@@ -246,7 +246,7 @@ Contoh konfigurasi lokal:
 
 ```java
 private static final String URL =
-        "jdbc:mysql://localhost:3306/db_presensi";
+        "jdbc:mysql://localhost:3306/db_presensikaryawan";
 
 private static final String USER = "root";
 
