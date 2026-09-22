@@ -6,9 +6,77 @@ public class Dasboard extends javax.swing.JFrame {
 
     public Dasboard() {
         initComponents();
+
+        getContentPane().setLayout(
+            new java.awt.BorderLayout()
+        );
+        javax.swing.JPanel panelSidebar =
+        new javax.swing.JPanel();
         
-        setSize(800, 600);
-        setLocationRelativeTo(null);
+        panelSidebar.setBackground(
+            java.awt.Color.BLUE
+        );
+
+        panelSidebar.setPreferredSize(
+            new java.awt.Dimension(350, 0)
+        );
+
+        panelSidebar.setLayout(new java.awt.BorderLayout());
+        panelSidebar.setBackground(java.awt.Color.BLUE);
+
+        javax.swing.JButton tombolKecil =
+            new javax.swing.JButton("<");
+
+        tombolKecil.setFocusPainted(false);
+
+        javax.swing.JPanel panelAtas =
+            new javax.swing.JPanel(
+                new java.awt.FlowLayout(
+                    java.awt.FlowLayout.RIGHT,
+                    0,
+                    0
+                )
+            );
+
+        panelAtas.setBackground(java.awt.Color.BLUE);
+        panelAtas.add(tombolKecil);
+        panelSidebar.add(
+            panelAtas, 
+            java.awt.BorderLayout.NORTH
+        );
+
+        getContentPane().add(
+            panelSidebar,
+            java.awt.BorderLayout.WEST
+        );
+
+        javax.swing.JPanel panelKonten =
+            new javax.swing.JPanel();
+
+        javax.swing.JSplitPane splitPane =
+            new javax.swing.JSplitPane(
+                javax.swing.JSplitPane.HORIZONTAL_SPLIT,
+                panelSidebar,
+                panelKonten
+            );
+
+        getContentPane().add(splitPane);
+
+        final boolean[] sidebarKecil = {false};
+
+        tombolKecil.addActionListener(e -> {
+            if (sidebarKecil[0]) {
+                splitPane.setDividerLocation(350);
+                sidebarKecil[0] = false;
+            } else {
+                splitPane.setDividerLocation(35);
+                sidebarKecil[0] = true;
+            }
+        });
+
+        setExtendedState(
+            javax.swing.JFrame.MAXIMIZED_BOTH
+        );
     }
 
     private void initComponents() {
