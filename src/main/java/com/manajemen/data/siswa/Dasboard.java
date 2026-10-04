@@ -5,24 +5,27 @@ public class Dasboard extends javax.swing.JFrame {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Dasboard.class.getName());
 
     public Dasboard() {
+
+
+
         initComponents();
 
-        getContentPane().setLayout(
-            new java.awt.BorderLayout()
+        getContentPane().setLayout( 
+            new java.awt.BorderLayout() 
         );
+
         javax.swing.JPanel panelSidebar =
         new javax.swing.JPanel();
-        
+
         panelSidebar.setBackground(
-            java.awt.Color.BLUE
+            new java.awt.Color(25, 35, 55)
         );
 
         panelSidebar.setPreferredSize(
             new java.awt.Dimension(350, 0)
         );
-
+         
         panelSidebar.setLayout(new java.awt.BorderLayout());
-        panelSidebar.setBackground(java.awt.Color.BLUE);
 
         javax.swing.JButton tombolKecil =
             new javax.swing.JButton("<");
@@ -38,20 +41,202 @@ public class Dasboard extends javax.swing.JFrame {
                 )
             );
 
-        panelAtas.setBackground(java.awt.Color.BLUE);
+        panelAtas.setBackground(new java.awt.Color(25, 35, 55));
         panelAtas.add(tombolKecil);
         panelSidebar.add(
             panelAtas, 
             java.awt.BorderLayout.NORTH
         );
 
-        getContentPane().add(
-            panelSidebar,
-            java.awt.BorderLayout.WEST
+        javax.swing.JPanel panelMenu =
+        new javax.swing.JPanel();
+
+        panelMenu.setLayout(
+            new javax.swing.BoxLayout(
+                panelMenu,
+                javax.swing.BoxLayout.Y_AXIS
+            )
+        );
+
+        panelMenu.setBackground(
+            new java.awt.Color(25, 35, 55)
+        );
+
+        panelMenu.setBorder(
+            javax.swing.BorderFactory.createEmptyBorder(
+                50,
+                0,
+                0,
+                0
+            )
+        );
+        
+        // ICON
+        javax.swing.ImageIcon iconDashboard =
+            resizeIcon(
+                "/com/images/icon/1.png",
+                24,
+                24
+            );
+
+        javax.swing.ImageIcon iconKaryawan =
+            resizeIcon(
+                "/com/images/icon/2.png",
+                24,
+                24
+            );
+
+        javax.swing.ImageIcon iconJadwal =
+            resizeIcon(
+                "/com/images/icon/3.png",
+                24,
+                24
+            );
+
+        javax.swing.ImageIcon iconRiwayat =
+            resizeIcon(
+                "/com/images/icon/4.png",
+                24,
+                24
+            );
+
+        javax.swing.ImageIcon iconLaporan =
+            resizeIcon(
+                "/com/images/icon/5.png",
+                24,
+                24
+            );
+
+        javax.swing.ImageIcon iconPengaturan =
+            resizeIcon(
+                "/com/images/icon/6.png",
+                24,
+                24
+            );
+
+        // TOMBOL MENU
+        javax.swing.JButton btnDashboard =
+            new javax.swing.JButton("Dashboard", iconDashboard);
+
+        javax.swing.JButton btnKaryawan =
+            new javax.swing.JButton("Data Karyawan", iconKaryawan);
+
+        javax.swing.JButton btnJadwal =
+            new javax.swing.JButton("Jadwal Presensi", iconJadwal);
+
+        javax.swing.JButton btnRiwayat =
+            new javax.swing.JButton("Riwayat Presensi", iconRiwayat);
+
+        javax.swing.JButton btnLaporan =
+            new javax.swing.JButton("Laporan", iconLaporan);
+
+        javax.swing.JButton btnPengaturan =
+            new javax.swing.JButton("Pengaturan", iconPengaturan);
+
+        // ATUR TAMPILAN TOMBOL
+        javax.swing.JButton[] tombolMenu = {
+            btnDashboard,
+            btnKaryawan,
+            btnJadwal,
+            btnRiwayat,
+            btnLaporan,
+            btnPengaturan
+        };
+
+        for (javax.swing.JButton tombol : tombolMenu) {
+            tombol.setFocusPainted(false);
+            tombol.setBorderPainted(false);
+            tombol.setContentAreaFilled(false);
+            tombol.setForeground(java.awt.Color.WHITE);
+            tombol.setHorizontalAlignment(
+                javax.swing.SwingConstants.LEFT
+            );
+            tombol.setIconTextGap(15);
+            tombol.setFont(
+                new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16)
+            );
+
+            tombol.setAlignmentX(
+                javax.swing.JComponent.LEFT_ALIGNMENT
+            );
+
+            tombol.setMaximumSize(
+                new java.awt.Dimension(
+                    Integer.MAX_VALUE,
+                    55
+                )
+            );
+
+            tombol.setPreferredSize(
+                new java.awt.Dimension(
+                    350,
+                    55
+                )
+            );
+            
+        }
+
+        // MASUKKAN KE PANEL MENU -> DONE
+        panelMenu.add(btnDashboard);
+        panelMenu.add(javax.swing.Box.createVerticalStrut(5));
+        panelMenu.add(btnKaryawan);
+        panelMenu.add(javax.swing.Box.createVerticalStrut(5));
+        panelMenu.add(btnJadwal);
+        panelMenu.add(javax.swing.Box.createVerticalStrut(5));
+        panelMenu.add(btnRiwayat);
+        panelMenu.add(javax.swing.Box.createVerticalStrut(5));
+        panelMenu.add(btnLaporan);
+        panelMenu.add(javax.swing.Box.createVerticalStrut(5));
+        panelMenu.add(btnPengaturan);
+// batas
+
+        panelSidebar.add(
+            panelMenu,
+            java.awt.BorderLayout.CENTER
         );
 
         javax.swing.JPanel panelKonten =
             new javax.swing.JPanel();
+        
+        panelKonten.setLayout(
+            new java.awt.BorderLayout()
+        );
+
+        btnDashboard.addActionListener(e -> {
+            tampilkanHalaman(
+                panelKonten, "Dashboard"
+            );
+        });
+
+        btnKaryawan.addActionListener(e -> {
+            tampilkanHalaman(
+                panelKonten, "Data Karyawan"
+            );
+        });
+
+        btnJadwal.addActionListener(e -> {
+            tampilkanHalaman(
+                panelKonten, "Jadwal Presensi"
+            );
+        });
+
+        btnRiwayat.addActionListener(e -> {
+            tampilkanHalaman(
+                panelKonten, "Riwayat Presensi"
+            );
+        });
+
+        btnLaporan.addActionListener(e -> {
+            tampilkanHalaman(
+                panelKonten, "Laporan"
+            );
+        });
+
+        btnPengaturan.addActionListener(e -> {
+            tampilkanHalaman(
+                panelKonten, "Pengaturan"
+            );
+        });
 
         javax.swing.JSplitPane splitPane =
             new javax.swing.JSplitPane(
@@ -60,25 +245,128 @@ public class Dasboard extends javax.swing.JFrame {
                 panelKonten
             );
 
-        getContentPane().add(splitPane);
+        getContentPane().add(
+            splitPane,
+            java.awt.BorderLayout.CENTER
+        );
 
-        final boolean[] sidebarKecil = {false};
+    final boolean[] sidebarKecil = {false};
 
-        tombolKecil.addActionListener(e -> {
-            if (sidebarKecil[0]) {
-                splitPane.setDividerLocation(350);
-                sidebarKecil[0] = false;
-            } else {
-                splitPane.setDividerLocation(35);
-                sidebarKecil[0] = true;
+    tombolKecil.addActionListener(e -> {
+
+        if (sidebarKecil[0]) {
+
+            // =========================
+            // SIDEBAR DIBESARKAN
+            // =========================
+
+            splitPane.setDividerLocation(350);
+
+            btnDashboard.setText("Dashboard");
+            btnKaryawan.setText("Data Karyawan");
+            btnJadwal.setText("Jadwal Presensi");
+            btnRiwayat.setText("Riwayat Presensi");
+            btnLaporan.setText("Laporan");
+            btnPengaturan.setText("Pengaturan");
+
+            for (javax.swing.JButton tombol : tombolMenu) {
+
+                tombol.setHorizontalAlignment(
+                    javax.swing.SwingConstants.LEFT
+                );
+
             }
-        });
+
+            tombolKecil.setText("<");
+
+            sidebarKecil[0] = false;
+
+        } else {
+
+            // =========================
+            // SIDEBAR DIKECILKAN
+            // =========================
+
+            splitPane.setDividerLocation(60);
+
+            btnDashboard.setText("");
+            btnKaryawan.setText("");
+            btnJadwal.setText("");
+            btnRiwayat.setText("");
+            btnLaporan.setText("");
+            btnPengaturan.setText("");
+
+            for (javax.swing.JButton tombol : tombolMenu) {
+
+                tombol.setHorizontalAlignment(
+                    javax.swing.SwingConstants.CENTER
+                );
+
+            }
+
+            tombolKecil.setText(">");
+
+            sidebarKecil[0] = true;
+        }
+    });
 
         setExtendedState(
             javax.swing.JFrame.MAXIMIZED_BOTH
         );
     }
 
+    private javax.swing.ImageIcon resizeIcon(
+        String lokasi,
+        int lebar,
+        int tinggi
+    ) 
+    {
+        java.awt.Image gambar =
+            new javax.swing.ImageIcon(
+                getClass().getResource(lokasi)
+            ).getImage();
+
+        java.awt.Image gambarKecil =
+            gambar.getScaledInstance(
+                lebar,
+                tinggi,
+                java.awt.Image.SCALE_SMOOTH
+            );
+
+        return new javax.swing.ImageIcon(gambarKecil);
+    }
+
+    private void tampilkanHalaman(
+            javax.swing.JPanel panelKonten,
+            String judul
+    ) {
+
+        panelKonten.removeAll();
+
+        javax.swing.JLabel labelJudul =
+            new javax.swing.JLabel(judul);
+
+        labelJudul.setFont(
+            new java.awt.Font(
+                "Segoe UI",
+                java.awt.Font.BOLD,
+                30
+            )
+        );
+
+        labelJudul.setHorizontalAlignment(
+            javax.swing.SwingConstants.CENTER
+        );
+
+        panelKonten.add(
+            labelJudul,
+            java.awt.BorderLayout.CENTER
+        );
+
+        panelKonten.revalidate();
+        panelKonten.repaint();
+    }
+    
     private void initComponents() {
 
         jLabel1 = new javax.swing.JLabel();
