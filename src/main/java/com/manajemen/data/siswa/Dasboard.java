@@ -72,6 +72,7 @@ public class Dasboard extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         getContentPane().setLayout(new BorderLayout());
 
+        pabrikHalaman.put("Dashboard", PanelScanPresensi::new);
         pabrikHalaman.put("Data Karyawan", PanelDataKaryawan::new);
 
         splitPane.setLeftComponent(buatSidebar());

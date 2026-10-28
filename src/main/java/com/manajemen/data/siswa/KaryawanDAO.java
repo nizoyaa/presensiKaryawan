@@ -1,6 +1,5 @@
 package com.manajemen.data.siswa;
 
-import com.config.DatabaseConnection;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -30,21 +29,8 @@ public class KaryawanDAO {
         public List<String> departemen = new ArrayList<>();
     }
 
-    private Connection conn;
-
-    /**
-     * Mengambil koneksi dari DatabaseConnection dan memakainya ulang.
-     * Koneksi sengaja tidak ditutup per query; hanya dibuat ulang kalau sudah mati.
-     * Jika nama method di DatabaseConnection berbeda, ubah satu baris di bawah ini.
-     */
-    private synchronized Connection koneksi() throws SQLException {
-        if (conn == null || conn.isClosed() || !conn.isValid(2)) {
-            conn = DatabaseConnection.getConnection();
-            if (conn == null) {
-                throw new SQLException("Koneksi ke database gagal (koneksi bernilai null).");
-            }
-        }
-        return conn;
+    private Connection koneksi() throws SQLException {
+        return KoneksiDB.ambil();
     }
 
     // =====================================================
@@ -89,6 +75,17 @@ public class KaryawanDAO {
             }
         }
         return hasil;
+    }
+
+    /** Mencari satu karyawan dari kode (misalnya hasil scan). Null kalau tidak ada. */
+    public Karyawan cariByKode(String kode) throws SQLException {
+        String sql = "SELECT " + KOLOM + " FROM karyawan WHERE kode_karyawan = ? LIMIT 1";
+        try (PreparedStatement ps = koneksi().prepareStatement(sql)) {
+            ps.setString(1, kode);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? petakan(rs) : null;
+            }
+        }
     }
 
     public Ringkasan ringkasan() throws SQLException {
@@ -186,7 +183,8 @@ public class KaryawanDAO {
     // UTILITAS
     // =====================================================
 
-    private Karyawan petakan(ResultSet rs) throws SQLException {
+    /** Dipakai juga oleh PresensiDAO; membaca kolom berdasarkan nama. */
+    static Karyawan petakan(ResultSet rs) throws SQLException {
         Karyawan k = new Karyawan();
         k.setId(rs.getInt("id"));
         k.setKode(rs.getString("kode_karyawan"));

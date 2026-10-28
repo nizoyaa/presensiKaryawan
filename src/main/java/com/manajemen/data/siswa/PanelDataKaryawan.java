@@ -3,7 +3,6 @@ package com.manajemen.data.siswa;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -52,9 +51,7 @@ import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 
 /**
@@ -69,7 +66,6 @@ public class PanelDataKaryawan extends JPanel {
     private static final int KOLOM_TANGGAL = 7;
     private static final int KOLOM_STATUS = 8;
     private static final String SEMUA = "Semua";
-    private static final Color BARIS_GANJIL = new Color(248, 250, 252);
     private static final DateTimeFormatter FORMAT_TANGGAL = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     private final KaryawanDAO dao = new KaryawanDAO();
@@ -192,30 +188,10 @@ public class PanelDataKaryawan extends JPanel {
     private JPanel buatKartuStatistik() {
         JPanel p = new JPanel(new GridLayout(1, 3, 16, 0));
         p.setOpaque(false);
-        p.add(buatKartu("Total Karyawan", lblTotal, Tema.UTAMA));
-        p.add(buatKartu("Karyawan Aktif", lblAktif, Tema.SUKSES));
-        p.add(buatKartu("Karyawan Nonaktif", lblNonaktif, Tema.TEKS_PUDAR));
+        p.add(Tema.kartuStatistik("Total Karyawan", lblTotal, Tema.UTAMA));
+        p.add(Tema.kartuStatistik("Karyawan Aktif", lblAktif, Tema.SUKSES));
+        p.add(Tema.kartuStatistik("Karyawan Nonaktif", lblNonaktif, Tema.TEKS_PUDAR));
         return p;
-    }
-
-    private JPanel buatKartu(String judul, JLabel nilai, Color aksen) {
-        JLabel lblJudul = new JLabel(judul);
-        lblJudul.setFont(Tema.font(Font.PLAIN, 13));
-        lblJudul.setForeground(Tema.TEKS_PUDAR);
-
-        nilai.setFont(Tema.font(Font.BOLD, 28));
-        nilai.setForeground(aksen);
-
-        JPanel kartu = new JPanel(new BorderLayout(0, 2));
-        kartu.setBackground(Tema.KARTU);
-        kartu.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Tema.GARIS),
-            BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 5, 0, 0, aksen),
-                BorderFactory.createEmptyBorder(12, 16, 12, 16))));
-        kartu.add(lblJudul, BorderLayout.NORTH);
-        kartu.add(nilai, BorderLayout.CENTER);
-        return kartu;
     }
 
     private JPanel buatToolbar() {
@@ -298,15 +274,8 @@ public class PanelDataKaryawan extends JPanel {
     }
 
     private void siapkanTabel() {
-        tabel.setRowHeight(40);
-        tabel.setShowGrid(false);
-        tabel.setIntercellSpacing(new Dimension(0, 0));
-        tabel.setFillsViewportHeight(true);
-        tabel.setFont(Tema.font(Font.PLAIN, 14));
+        Tema.gayaiTabel(tabel);
         tabel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabel.setSelectionBackground(new Color(219, 234, 254));
-        tabel.setSelectionForeground(Tema.TEKS);
-        tabel.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         tabel.setRowSorter(sorter);
         sorter.setSortable(0, false);
@@ -317,22 +286,20 @@ public class PanelDataKaryawan extends JPanel {
             tabel.getColumnModel().getColumn(i).setPreferredWidth(lebar[i]);
         }
 
-        // isi sel
-        tabel.setDefaultRenderer(Object.class, new RendererDasar());
-        tabel.setDefaultRenderer(LocalDate.class, new RendererDasar() {
+        tabel.setDefaultRenderer(LocalDate.class, new Tema.RendererTabel() {
             @Override
             protected void ubahTampilan(Object nilai, int baris) {
                 setText(nilai instanceof LocalDate ? ((LocalDate) nilai).format(FORMAT_TANGGAL) : "-");
             }
         });
-        tabel.getColumnModel().getColumn(0).setCellRenderer(new RendererDasar() {
+        tabel.getColumnModel().getColumn(0).setCellRenderer(new Tema.RendererTabel() {
             @Override
             protected void ubahTampilan(Object nilai, int baris) {
                 setText(String.valueOf(baris + 1));
                 setForeground(Tema.TEKS_PUDAR);
             }
         });
-        tabel.getColumnModel().getColumn(KOLOM_STATUS).setCellRenderer(new RendererDasar() {
+        tabel.getColumnModel().getColumn(KOLOM_STATUS).setCellRenderer(new Tema.RendererTabel() {
             @Override
             protected void ubahTampilan(Object nilai, int baris) {
                 boolean aktif = Karyawan.STATUS_AKTIF.equals(nilai);
@@ -341,55 +308,6 @@ public class PanelDataKaryawan extends JPanel {
                 setFont(Tema.font(Font.BOLD, 13));
             }
         });
-
-        // judul kolom
-        JTableHeader header = tabel.getTableHeader();
-        header.setReorderingAllowed(false);
-        header.setPreferredSize(new Dimension(0, 42));
-        header.setDefaultRenderer(new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable t, Object nilai, boolean dipilih,
-                    boolean fokus, int baris, int kolom) {
-                super.getTableCellRendererComponent(t, nilai, false, false, baris, kolom);
-                String teks = String.valueOf(nilai);
-                List<? extends RowSorter.SortKey> kunci = sorter.getSortKeys();
-                if (!kunci.isEmpty() && kunci.get(0).getColumn() == t.convertColumnIndexToModel(kolom)
-                        && kunci.get(0).getSortOrder() != SortOrder.UNSORTED) {
-                    teks += kunci.get(0).getSortOrder() == SortOrder.ASCENDING ? "   \u25B2" : "   \u25BC";
-                }
-                setText(teks);
-                setOpaque(true);
-                setBackground(Tema.SIDEBAR);
-                setForeground(Color.WHITE);
-                setFont(Tema.font(Font.BOLD, 13));
-                setHorizontalAlignment(SwingConstants.LEFT);
-                setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
-                return this;
-            }
-        });
-    }
-
-    /** Renderer dasar: padding, warna selang-seling, dan warna baris terpilih. */
-    private class RendererDasar extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(JTable t, Object nilai, boolean dipilih,
-                boolean fokus, int baris, int kolom) {
-            super.getTableCellRendererComponent(t, nilai, dipilih, false, baris, kolom);
-            setOpaque(true);
-            setFont(t.getFont());
-            setHorizontalAlignment(SwingConstants.LEFT);
-            setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
-            setForeground(Tema.TEKS);
-            setBackground(dipilih ? t.getSelectionBackground() : (baris % 2 == 0 ? Color.WHITE : BARIS_GANJIL));
-            if (nilai == null || String.valueOf(nilai).trim().isEmpty()) {
-                setText("-");
-            }
-            ubahTampilan(nilai, baris);
-            return this;
-        }
-
-        protected void ubahTampilan(Object nilai, int baris) {
-        }
     }
 
     // =====================================================
@@ -729,8 +647,8 @@ public class PanelDataKaryawan extends JPanel {
         boolean menonaktifkan = k.isAktif();
         String statusBaru = menonaktifkan ? Karyawan.STATUS_NONAKTIF : Karyawan.STATUS_AKTIF;
         String pesan = menonaktifkan
-            ? "Nonaktifkan " + k.getNama() + "?\nKaryawan nonaktif tidak akan dihitung saat presensi, "
-                + "tetapi datanya tetap tersimpan."
+            ? "Nonaktifkan " + k.getNama() + "?\nKaryawan nonaktif tidak bisa melakukan presensi, "
+                + "tetapi data dan riwayat presensinya tetap tersimpan."
             : "Aktifkan kembali " + k.getNama() + "?";
 
         int pilihan = JOptionPane.showConfirmDialog(this, pesan,
@@ -756,8 +674,8 @@ public class PanelDataKaryawan extends JPanel {
         Object[] opsi = {"Hapus Permanen", "Batal"};
         int pilihan = JOptionPane.showOptionDialog(this,
             "Hapus " + k.getNama() + " (" + k.getKode() + ") secara permanen?\n\n"
-                + "Data yang dihapus tidak bisa dikembalikan. Jika karyawan hanya berhenti bekerja,\n"
-                + "lebih aman memakai 'Nonaktifkan' agar riwayat presensinya tetap ada.",
+                + "Data yang dihapus tidak bisa dikembalikan. Karyawan yang sudah punya riwayat presensi\n"
+                + "tidak bisa dihapus; untuk karyawan yang berhenti bekerja, pakai 'Nonaktifkan'.",
             "Hapus karyawan", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
             null, opsi, opsi[1]);
         if (pilihan != 0) {
@@ -869,21 +787,7 @@ public class PanelDataKaryawan extends JPanel {
     }
 
     private void tampilkanGalat(String judul, Throwable ex) {
-        String detail = ex == null || ex.getMessage() == null ? "Terjadi kesalahan tak dikenal." : ex.getMessage();
-        String saran = "";
-
-        if (ex instanceof SQLException) {
-            String state = ((SQLException) ex).getSQLState();
-            if (state != null && state.startsWith("23")) {
-                saran = "\n\nKode karyawan sudah dipakai karyawan lain. Coba simpan ulang.";
-            } else if (detail.contains("doesn't exist")) {
-                saran = "\n\nTabel 'karyawan' belum dibuat. Jalankan file karyawan.sql di phpMyAdmin "
-                    + "pada database db_presensikaryawan.";
-            } else if (detail.contains("Communications link failure") || detail.contains("Connection refused")) {
-                saran = "\n\nPastikan MySQL (XAMPP) sedang berjalan.";
-            }
-        }
-        JOptionPane.showMessageDialog(this, judul + ":\n" + detail + saran, "Terjadi masalah",
+        JOptionPane.showMessageDialog(this, judul + ":\n" + Galat.pesan(ex), "Terjadi masalah",
             JOptionPane.ERROR_MESSAGE);
     }
 }

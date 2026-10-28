@@ -1,6 +1,8 @@
 package com.manajemen.data.siswa;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
@@ -9,11 +11,20 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.RenderingHints;
+import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonModel;
 import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
+import javax.swing.SwingConstants;
 import javax.swing.border.Border;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
 
 /**
  * Warna, font, dan komponen kecil yang dipakai bersama oleh halaman-halaman aplikasi.
@@ -50,6 +61,108 @@ final class Tema {
             BorderFactory.createLineBorder(GARIS),
             BorderFactory.createEmptyBorder(7, 10, 7, 10)
         );
+    }
+
+    /** Mencampur warna dengan putih. porsi 1 = warna asli, 0 = putih. Berguna untuk latar yang lembut. */
+    static Color campur(Color warna, float porsi) {
+        int r = Math.round(255 - (255 - warna.getRed()) * porsi);
+        int g = Math.round(255 - (255 - warna.getGreen()) * porsi);
+        int b = Math.round(255 - (255 - warna.getBlue()) * porsi);
+        return new Color(r, g, b);
+    }
+
+    /** Kartu angka ringkasan (judul kecil + angka besar) dengan garis warna di sisi kiri. */
+    static JPanel kartuStatistik(String judul, JLabel nilai, Color aksen) {
+        JLabel lblJudul = new JLabel(judul);
+        lblJudul.setFont(font(Font.PLAIN, 13));
+        lblJudul.setForeground(TEKS_PUDAR);
+
+        nilai.setFont(font(Font.BOLD, 28));
+        nilai.setForeground(aksen);
+
+        JPanel kartu = new JPanel(new BorderLayout(0, 2));
+        kartu.setBackground(KARTU);
+        kartu.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(GARIS),
+            BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 5, 0, 0, aksen),
+                BorderFactory.createEmptyBorder(12, 16, 12, 16))));
+        kartu.add(lblJudul, BorderLayout.NORTH);
+        kartu.add(nilai, BorderLayout.CENTER);
+        return kartu;
+    }
+
+    /**
+     * Gaya tabel yang seragam: baris lega, tanpa garis kisi, warna selang-seling,
+     * dan judul kolom gelap (dengan panah urutan kalau tabelnya punya sorter).
+     */
+    static void gayaiTabel(JTable tabel) {
+        tabel.setRowHeight(40);
+        tabel.setShowGrid(false);
+        tabel.setIntercellSpacing(new Dimension(0, 0));
+        tabel.setFillsViewportHeight(true);
+        tabel.setFont(font(Font.PLAIN, 14));
+        tabel.setSelectionBackground(new Color(219, 234, 254));
+        tabel.setSelectionForeground(TEKS);
+        tabel.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        tabel.setDefaultRenderer(Object.class, new RendererTabel());
+
+        JTableHeader header = tabel.getTableHeader();
+        header.setReorderingAllowed(false);
+        header.setPreferredSize(new Dimension(0, 42));
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object nilai, boolean dipilih,
+                    boolean fokus, int baris, int kolom) {
+                super.getTableCellRendererComponent(t, nilai, false, false, baris, kolom);
+                String teks = String.valueOf(nilai);
+                RowSorter<?> sorter = t.getRowSorter();
+                if (sorter != null) {
+                    List<? extends RowSorter.SortKey> kunci = sorter.getSortKeys();
+                    if (!kunci.isEmpty() && kunci.get(0).getColumn() == t.convertColumnIndexToModel(kolom)
+                            && kunci.get(0).getSortOrder() != SortOrder.UNSORTED) {
+                        teks += kunci.get(0).getSortOrder() == SortOrder.ASCENDING ? "   \u25B2" : "   \u25BC";
+                    }
+                }
+                setText(teks);
+                setOpaque(true);
+                setBackground(SIDEBAR);
+                setForeground(Color.WHITE);
+                setFont(font(Font.BOLD, 13));
+                setHorizontalAlignment(SwingConstants.LEFT);
+                setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
+                return this;
+            }
+        });
+    }
+
+    /**
+     * Renderer sel dasar: padding, warna selang-seling, dan warna baris terpilih.
+     * Untuk tampilan khusus per kolom, buat turunan dan isi ubahTampilan().
+     */
+    static class RendererTabel extends DefaultTableCellRenderer {
+
+        private static final Color BARIS_GANJIL = new Color(248, 250, 252);
+
+        @Override
+        public Component getTableCellRendererComponent(JTable t, Object nilai, boolean dipilih,
+                boolean fokus, int baris, int kolom) {
+            super.getTableCellRendererComponent(t, nilai, dipilih, false, baris, kolom);
+            setOpaque(true);
+            setFont(t.getFont());
+            setHorizontalAlignment(SwingConstants.LEFT);
+            setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
+            setForeground(TEKS);
+            setBackground(dipilih ? t.getSelectionBackground() : (baris % 2 == 0 ? Color.WHITE : BARIS_GANJIL));
+            if (nilai == null || String.valueOf(nilai).trim().isEmpty()) {
+                setText("-");
+            }
+            ubahTampilan(nilai, baris);
+            return this;
+        }
+
+        protected void ubahTampilan(Object nilai, int baris) {
+        }
     }
 
     /**
