@@ -1,435 +1,222 @@
 package com.manajemen.data.siswa;
 
-public class Dasboard extends javax.swing.JFrame {
-    
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Dasboard.class.getName());
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Image;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
+public class Dasboard extends JFrame {
+
+    private static final Logger logger = Logger.getLogger(Dasboard.class.getName());
+
+    // ===== KONSTANTA =====
+    private static final int LEBAR_SIDEBAR_BESAR = 350;
+    private static final int LEBAR_SIDEBAR_KECIL = 60;
+    private static final int TINGGI_TOMBOL = 55;
+    private static final int UKURAN_ICON = 24;
+    private static final Color WARNA_SIDEBAR = new Color(25, 35, 55);
+    private static final String LOKASI_ICON = "/com/images/icon/";
+
+    // Daftar menu: {teks menu, nama file ikon}
+    private static final String[][] DAFTAR_MENU = {
+        {"Dashboard",        "1.png"},
+        {"Data Karyawan",    "2.png"},
+        {"Jadwal Presensi",  "3.png"},
+        {"Riwayat Presensi", "4.png"},
+        {"Laporan",          "5.png"},
+        {"Pengaturan",       "6.png"}
+    };
+
+    // ===== KOMPONEN =====
+    private final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    private final JPanel panelKonten = new JPanel(new CardLayout());
+    private final JButton tombolToggle = new JButton("<");
+    private final List<JButton> tombolMenu = new ArrayList<>();
+
+    // Halaman dibuat saat menu pertama kali dibuka (bukan saat aplikasi mulai),
+    // supaya halaman yang memuat database tidak langsung mengakses DB di awal.
+    private final Map<String, Supplier<JComponent>> pabrikHalaman = new HashMap<>();
+    private final Set<String> halamanTerbuat = new HashSet<>();
+
+    private boolean sidebarKecil = false;
 
     public Dasboard() {
+        setTitle("Dashboard");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        getContentPane().setLayout(new BorderLayout());
 
+        pabrikHalaman.put("Data Karyawan", PanelDataKaryawan::new);
 
+        splitPane.setLeftComponent(buatSidebar());
+        splitPane.setRightComponent(panelKonten);
+        splitPane.setEnabled(false); // divider dikunci, lebar diatur lewat tombol toggle
+        splitPane.setDividerLocation(LEBAR_SIDEBAR_BESAR);
+        getContentPane().add(splitPane, BorderLayout.CENTER);
 
-        initComponents();
+        tombolToggle.addActionListener(e -> aturSidebar(!sidebarKecil));
 
-        getContentPane().setLayout( 
-            new java.awt.BorderLayout() 
-        );
+        tampilkanHalaman(DAFTAR_MENU[0][0]);
+        setExtendedState(MAXIMIZED_BOTH);
+    }
 
-        javax.swing.JPanel panelSidebar =
-        new javax.swing.JPanel();
+    // =====================================================
+    // SIDEBAR
+    // =====================================================
 
-        panelSidebar.setBackground(
-            new java.awt.Color(25, 35, 55)
-        );
+    private JPanel buatSidebar() {
+        JPanel sidebar = new JPanel(new BorderLayout());
+        sidebar.setBackground(WARNA_SIDEBAR);
+        sidebar.setPreferredSize(new Dimension(LEBAR_SIDEBAR_BESAR, 0));
+        sidebar.setMinimumSize(new Dimension(LEBAR_SIDEBAR_KECIL, 0));
 
-        panelSidebar.setPreferredSize(
-            new java.awt.Dimension(350, 0)
-        );
-         
-        panelSidebar.setLayout(new java.awt.BorderLayout());
+        sidebar.add(buatPanelAtas(), BorderLayout.NORTH);
+        sidebar.add(buatPanelMenu(), BorderLayout.CENTER);
+        return sidebar;
+    }
 
-        javax.swing.JButton tombolKecil =
-            new javax.swing.JButton("<");
+    private JPanel buatPanelAtas() {
+        tombolToggle.setFocusPainted(false);
 
-        tombolKecil.setFocusPainted(false);
+        JPanel panelAtas = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        panelAtas.setBackground(WARNA_SIDEBAR);
+        panelAtas.add(tombolToggle);
+        return panelAtas;
+    }
 
-        javax.swing.JPanel panelAtas =
-            new javax.swing.JPanel(
-                new java.awt.FlowLayout(
-                    java.awt.FlowLayout.RIGHT,
-                    0,
-                    0
-                )
-            );
+    private JPanel buatPanelMenu() {
+        JPanel panelMenu = new JPanel();
+        panelMenu.setLayout(new BoxLayout(panelMenu, BoxLayout.Y_AXIS));
+        panelMenu.setBackground(WARNA_SIDEBAR);
+        panelMenu.setBorder(BorderFactory.createEmptyBorder(50, 0, 0, 0));
 
-        panelAtas.setBackground(new java.awt.Color(25, 35, 55));
-        panelAtas.add(tombolKecil);
-        panelSidebar.add(
-            panelAtas, 
-            java.awt.BorderLayout.NORTH
-        );
+        for (int i = 0; i < DAFTAR_MENU.length; i++) {
+            String teks = DAFTAR_MENU[i][0];
+            String fileIcon = DAFTAR_MENU[i][1];
 
-        javax.swing.JPanel panelMenu =
-        new javax.swing.JPanel();
+            JButton tombol = buatTombolMenu(teks, muatIcon(LOKASI_ICON + fileIcon));
+            tombol.addActionListener(e -> tampilkanHalaman(teks));
+            tombolMenu.add(tombol);
 
-        panelMenu.setLayout(
-            new javax.swing.BoxLayout(
-                panelMenu,
-                javax.swing.BoxLayout.Y_AXIS
-            )
-        );
-
-        panelMenu.setBackground(
-            new java.awt.Color(25, 35, 55)
-        );
-
-        panelMenu.setBorder(
-            javax.swing.BorderFactory.createEmptyBorder(
-                50,
-                0,
-                0,
-                0
-            )
-        );
-        
-        // ICON
-        javax.swing.ImageIcon iconDashboard =
-            resizeIcon(
-                "/com/images/icon/1.png",
-                24,
-                24
-            );
-
-        javax.swing.ImageIcon iconKaryawan =
-            resizeIcon(
-                "/com/images/icon/2.png",
-                24,
-                24
-            );
-
-        javax.swing.ImageIcon iconJadwal =
-            resizeIcon(
-                "/com/images/icon/3.png",
-                24,
-                24
-            );
-
-        javax.swing.ImageIcon iconRiwayat =
-            resizeIcon(
-                "/com/images/icon/4.png",
-                24,
-                24
-            );
-
-        javax.swing.ImageIcon iconLaporan =
-            resizeIcon(
-                "/com/images/icon/5.png",
-                24,
-                24
-            );
-
-        javax.swing.ImageIcon iconPengaturan =
-            resizeIcon(
-                "/com/images/icon/6.png",
-                24,
-                24
-            );
-
-        // TOMBOL MENU
-        javax.swing.JButton btnDashboard =
-            new javax.swing.JButton("Dashboard", iconDashboard);
-
-        javax.swing.JButton btnKaryawan =
-            new javax.swing.JButton("Data Karyawan", iconKaryawan);
-
-        javax.swing.JButton btnJadwal =
-            new javax.swing.JButton("Jadwal Presensi", iconJadwal);
-
-        javax.swing.JButton btnRiwayat =
-            new javax.swing.JButton("Riwayat Presensi", iconRiwayat);
-
-        javax.swing.JButton btnLaporan =
-            new javax.swing.JButton("Laporan", iconLaporan);
-
-        javax.swing.JButton btnPengaturan =
-            new javax.swing.JButton("Pengaturan", iconPengaturan);
-
-        // ATUR TAMPILAN TOMBOL
-        javax.swing.JButton[] tombolMenu = {
-            btnDashboard,
-            btnKaryawan,
-            btnJadwal,
-            btnRiwayat,
-            btnLaporan,
-            btnPengaturan
-        };
-
-        for (javax.swing.JButton tombol : tombolMenu) {
-            tombol.setFocusPainted(false);
-            tombol.setBorderPainted(false);
-            tombol.setContentAreaFilled(false);
-            tombol.setForeground(java.awt.Color.WHITE);
-            tombol.setHorizontalAlignment(
-                javax.swing.SwingConstants.LEFT
-            );
-            tombol.setIconTextGap(15);
-            tombol.setFont(
-                new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16)
-            );
-
-            tombol.setAlignmentX(
-                javax.swing.JComponent.LEFT_ALIGNMENT
-            );
-
-            tombol.setMaximumSize(
-                new java.awt.Dimension(
-                    Integer.MAX_VALUE,
-                    55
-                )
-            );
-
-            tombol.setPreferredSize(
-                new java.awt.Dimension(
-                    350,
-                    55
-                )
-            );
-            
-        }
-
-        // MASUKKAN KE PANEL MENU -> DONE
-        panelMenu.add(btnDashboard);
-        panelMenu.add(javax.swing.Box.createVerticalStrut(5));
-        panelMenu.add(btnKaryawan);
-        panelMenu.add(javax.swing.Box.createVerticalStrut(5));
-        panelMenu.add(btnJadwal);
-        panelMenu.add(javax.swing.Box.createVerticalStrut(5));
-        panelMenu.add(btnRiwayat);
-        panelMenu.add(javax.swing.Box.createVerticalStrut(5));
-        panelMenu.add(btnLaporan);
-        panelMenu.add(javax.swing.Box.createVerticalStrut(5));
-        panelMenu.add(btnPengaturan);
-// batas
-
-        panelSidebar.add(
-            panelMenu,
-            java.awt.BorderLayout.CENTER
-        );
-
-        javax.swing.JPanel panelKonten =
-            new javax.swing.JPanel();
-        
-        panelKonten.setLayout(
-            new java.awt.BorderLayout()
-        );
-
-        btnDashboard.addActionListener(e -> {
-            tampilkanHalaman(
-                panelKonten, "Dashboard"
-            );
-        });
-
-        btnKaryawan.addActionListener(e -> {
-            tampilkanHalaman(
-                panelKonten, "Data Karyawan"
-            );
-        });
-
-        btnJadwal.addActionListener(e -> {
-            tampilkanHalaman(
-                panelKonten, "Jadwal Presensi"
-            );
-        });
-
-        btnRiwayat.addActionListener(e -> {
-            tampilkanHalaman(
-                panelKonten, "Riwayat Presensi"
-            );
-        });
-
-        btnLaporan.addActionListener(e -> {
-            tampilkanHalaman(
-                panelKonten, "Laporan"
-            );
-        });
-
-        btnPengaturan.addActionListener(e -> {
-            tampilkanHalaman(
-                panelKonten, "Pengaturan"
-            );
-        });
-
-        javax.swing.JSplitPane splitPane =
-            new javax.swing.JSplitPane(
-                javax.swing.JSplitPane.HORIZONTAL_SPLIT,
-                panelSidebar,
-                panelKonten
-            );
-
-        getContentPane().add(
-            splitPane,
-            java.awt.BorderLayout.CENTER
-        );
-
-    final boolean[] sidebarKecil = {false};
-
-    tombolKecil.addActionListener(e -> {
-
-        if (sidebarKecil[0]) {
-
-            // =========================
-            // SIDEBAR DIBESARKAN
-            // =========================
-
-            splitPane.setDividerLocation(350);
-
-            btnDashboard.setText("Dashboard");
-            btnKaryawan.setText("Data Karyawan");
-            btnJadwal.setText("Jadwal Presensi");
-            btnRiwayat.setText("Riwayat Presensi");
-            btnLaporan.setText("Laporan");
-            btnPengaturan.setText("Pengaturan");
-
-            for (javax.swing.JButton tombol : tombolMenu) {
-
-                tombol.setHorizontalAlignment(
-                    javax.swing.SwingConstants.LEFT
-                );
-
+            if (i > 0) {
+                panelMenu.add(Box.createVerticalStrut(5));
             }
-
-            tombolKecil.setText("<");
-
-            sidebarKecil[0] = false;
-
-        } else {
-
-            // =========================
-            // SIDEBAR DIKECILKAN
-            // =========================
-
-            splitPane.setDividerLocation(60);
-
-            btnDashboard.setText("");
-            btnKaryawan.setText("");
-            btnJadwal.setText("");
-            btnRiwayat.setText("");
-            btnLaporan.setText("");
-            btnPengaturan.setText("");
-
-            for (javax.swing.JButton tombol : tombolMenu) {
-
-                tombol.setHorizontalAlignment(
-                    javax.swing.SwingConstants.CENTER
-                );
-
-            }
-
-            tombolKecil.setText(">");
-
-            sidebarKecil[0] = true;
+            panelMenu.add(tombol);
         }
-    });
-
-        setExtendedState(
-            javax.swing.JFrame.MAXIMIZED_BOTH
-        );
+        return panelMenu;
     }
 
-    private javax.swing.ImageIcon resizeIcon(
-        String lokasi,
-        int lebar,
-        int tinggi
-    ) 
-    {
-        java.awt.Image gambar =
-            new javax.swing.ImageIcon(
-                getClass().getResource(lokasi)
-            ).getImage();
-
-        java.awt.Image gambarKecil =
-            gambar.getScaledInstance(
-                lebar,
-                tinggi,
-                java.awt.Image.SCALE_SMOOTH
-            );
-
-        return new javax.swing.ImageIcon(gambarKecil);
+    private JButton buatTombolMenu(String teks, ImageIcon icon) {
+        JButton tombol = new JButton(teks, icon);
+        tombol.setToolTipText(teks);
+        tombol.setFocusPainted(false);
+        tombol.setBorderPainted(false);
+        tombol.setContentAreaFilled(false);
+        tombol.setForeground(Color.WHITE);
+        tombol.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        tombol.setHorizontalAlignment(SwingConstants.LEFT);
+        tombol.setIconTextGap(15);
+        tombol.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+        tombol.setMaximumSize(new Dimension(Integer.MAX_VALUE, TINGGI_TOMBOL));
+        tombol.setPreferredSize(new Dimension(LEBAR_SIDEBAR_BESAR, TINGGI_TOMBOL));
+        return tombol;
     }
-
-    private void tampilkanHalaman(
-            javax.swing.JPanel panelKonten,
-            String judul
-    ) {
-
-        panelKonten.removeAll();
-
-        javax.swing.JLabel labelJudul =
-            new javax.swing.JLabel(judul);
-
-        labelJudul.setFont(
-            new java.awt.Font(
-                "Segoe UI",
-                java.awt.Font.BOLD,
-                30
-            )
-        );
-
-        labelJudul.setHorizontalAlignment(
-            javax.swing.SwingConstants.CENTER
-        );
-
-        panelKonten.add(
-            labelJudul,
-            java.awt.BorderLayout.CENTER
-        );
-
-        panelKonten.revalidate();
-        panelKonten.repaint();
-    }
-    
-    private void initComponents() {
-
-        jLabel1 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
-        jLabel1.setText("DASHBOARD");
-
-        jButton1.setText("jButton1");
-        jButton1.addActionListener(this::jButton1ActionPerformed);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(165, 165, 165)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton1)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(609, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(51, 51, 51)
-                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jButton1)
-                .addContainerGap(381, Short.MAX_VALUE))
-        );
-
-        //pack();
-    }// </editor-fold>//GEN-END:initComponents
-
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
-     * @param args the command line arguments
+     * Membesarkan atau mengecilkan sidebar.
+     * Saat kecil: hanya ikon yang tampil (nama menu tersedia sebagai tooltip).
      */
-    public static void main(String args[]) {
+    private void aturSidebar(boolean kecil) {
+        sidebarKecil = kecil;
+        splitPane.setDividerLocation(kecil ? LEBAR_SIDEBAR_KECIL : LEBAR_SIDEBAR_BESAR);
+        tombolToggle.setText(kecil ? ">" : "<");
 
+        for (int i = 0; i < tombolMenu.size(); i++) {
+            JButton tombol = tombolMenu.get(i);
+            tombol.setText(kecil ? "" : DAFTAR_MENU[i][0]);
+            tombol.setHorizontalAlignment(kecil ? SwingConstants.CENTER : SwingConstants.LEFT);
+        }
+    }
+
+    // =====================================================
+    // KONTEN
+    // =====================================================
+
+    /**
+     * Halaman sementara berisi judul saja.
+     * Dipakai untuk menu yang halamannya belum dibuat. Daftarkan halaman asli di pabrikHalaman.
+     */
+    private JPanel buatHalaman(String judul) {
+        JLabel labelJudul = new JLabel(judul, SwingConstants.CENTER);
+        labelJudul.setFont(new Font("Segoe UI", Font.BOLD, 30));
+
+        JPanel halaman = new JPanel(new BorderLayout());
+        halaman.add(labelJudul, BorderLayout.CENTER);
+        return halaman;
+    }
+
+    private void tampilkanHalaman(String nama) {
+        if (halamanTerbuat.add(nama)) {
+            Supplier<JComponent> pabrik = pabrikHalaman.getOrDefault(nama, () -> buatHalaman(nama));
+            panelKonten.add(pabrik.get(), nama);
+        }
+        ((CardLayout) panelKonten.getLayout()).show(panelKonten, nama);
+    }
+
+    // =====================================================
+    // UTILITAS
+    // =====================================================
+
+    /** Memuat ikon dari classpath lalu mengecilkannya. Return null jika file tidak ketemu. */
+    private ImageIcon muatIcon(String lokasi) {
+        URL url = getClass().getResource(lokasi);
+        if (url == null) {
+            logger.log(Level.WARNING, "Ikon tidak ditemukan: {0}", lokasi);
+            return null;
+        }
+        Image gambar = new ImageIcon(url).getImage()
+                .getScaledInstance(UKURAN_ICON, UKURAN_ICON, Image.SCALE_SMOOTH);
+        return new ImageIcon(gambar);
+    }
+
+    public static void main(String[] args) {
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
             }
-        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (ReflectiveOperationException | UnsupportedLookAndFeelException ex) {
+            logger.log(Level.SEVERE, null, ex);
         }
-        //</editor-fold>
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new Dasboard().setVisible(true));
+        EventQueue.invokeLater(() -> new Dasboard().setVisible(true));
     }
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JLabel jLabel1;
-    // End of variables declaration//GEN-END:variables
 }
